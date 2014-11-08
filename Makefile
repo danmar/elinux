@@ -1,2 +1,2 @@
-server:	server.c
-	gcc -o server -Irpi_ws281x server.c -lws2811 -lpthread
+rpi:	rpi.c
+	gcc -o rpi -Irpi_ws281x rpi.c -lws2811 -lpthread
