@@ -21,6 +21,9 @@
 #include "ws2811.h"
 
 
+static int quit;
+
+
 /* leds */
 
 #define TARGET_FREQ                              WS2811_TARGET_FREQ
@@ -63,7 +66,6 @@ static void matrix_render(void);
 /* server */
 
 static void server(int port);
-static void handle_error(const char *msg) { perror(msg); exit(EXIT_FAILURE); }
 static int ReadLine(int fd, char buffer[], int bufsize);
 static int match(const char *str, const char *pattern);
 
@@ -92,10 +94,11 @@ static void handleleds() {
     ws2811_init(&ledstring);
     for (i = 0; i < 8; i++)
         matrix[i][0] = colors[i];
-    while (1) {
+    while (quit == 0) {
         ws2811_render(&ledstring);
         usleep(10000);
     }
+    ws2811_fini(&ledstring);
 }
 
 static void matrix_render(void) {
@@ -114,21 +117,32 @@ static void server(int port) {
 
     printf("server socket..\n");
     sfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sfd == -1)
-        handle_error("socket");
+    if (sfd == -1) {
+        printf("error");
+        quit = 1;
+        return;
+    }
 
     printf("bind..\n");
     my_addr.sin_family      = AF_INET;
     my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     my_addr.sin_port        = htons(port);
-    if (bind(sfd, (struct sockaddr *) &my_addr, sizeof(my_addr)) == -1)
-        handle_error("bind");
+    if (bind(sfd, (struct sockaddr *) &my_addr, sizeof(my_addr)) == -1) {
+        printf("error");
+        quit = 1;
+        close(sfd);
+        return;
+    }
 
     printf("listen..\n");
-    if (listen(sfd, 50) == -1)
-        handle_error("listen");
+    if (listen(sfd, 50) == -1) {
+        printf("error");
+        quit = 1;
+        close(sfd);
+        return;
+    }
 
-    /*while (1)*/ {
+    while (quit == 0) {
         printf("accept..\n");
         cfd = accept(sfd, NULL, NULL);
         if (cfd == -1)
@@ -160,6 +174,7 @@ static void server(int port) {
             }
             
             else if (strcmp(buffer, "quit") == 0)
+                quit = 1;
                 break;
         }
 
