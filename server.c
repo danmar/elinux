@@ -145,8 +145,11 @@ static void server(int port) {
     while (quit == 0) {
         printf("accept..\n");
         cfd = accept(sfd, NULL, NULL);
-        if (cfd == -1)
-            handle_error("accept");
+        if (cfd == -1) {
+            printf("error");
+            quit = 1;
+            break;
+        }
 
         printf("reading commands from client..");
         while (ReadLine(cfd, buffer, sizeof(buffer))) {
