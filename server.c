@@ -21,7 +21,7 @@
 #include "ws2811.h"
 
 
-static int quit;
+static volatile int quit;
 
 
 /* leds */
@@ -57,29 +57,35 @@ static ws2811_t ledstring =
     },
 };
 
-static int rotate;
-static ws2811_led_t matrix[WIDTH][HEIGHT];
+static volatile int rotate;
+static volatile ws2811_led_t matrix[WIDTH][HEIGHT];
 
-static void handleleds();
+static void handleleds(void *data);
 static void matrix_render(void);
 
 /* server */
 
-static void server(int port);
+static void server(void *data);
 static int ReadLine(int fd, char buffer[], int bufsize);
 static int match(const char *str, const char *pattern);
 
 int main(int argc, char *argv[]) {
-    if (fork() == 0) {
-        server(4321);
-    } else {
-        handleleds();
-    }
+    pthread_t  thread1, thread2;
+
+    pthread_create(&thread1, NULL, server, NULL);
+    pthread_create(&thread2, NULL, handleleds, NULL);
+
+    // Wait for server() to quit
+    pthread_join( thread1, NULL);
+
+    // Wait for handleleds() to quit
+    pthread_join( thread2, NULL); 
+
     return 0;
 }
 
 
-static void handleleds() {
+static void handleleds(void *data) {
     int i;
     ws2811_led_t colors[8] = {
         0x200000,  // red
@@ -95,9 +101,11 @@ static void handleleds() {
     for (i = 0; i < 8; i++)
         matrix[i][0] = colors[i];
     while (quit == 0) {
+        matrix_render();
         ws2811_render(&ledstring);
         usleep(10000);
     }
+    printf("\nws2811_fini\n");
     ws2811_fini(&ledstring);
 }
 
@@ -110,7 +118,7 @@ static void matrix_render(void) {
     }
 }
 
-static void server(int port) {
+static void server(void *data) {
     int sfd, cfd;
     struct sockaddr_in my_addr = {0};
     char buffer[1024] = {0};
@@ -126,7 +134,7 @@ static void server(int port) {
     printf("bind..\n");
     my_addr.sin_family      = AF_INET;
     my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    my_addr.sin_port        = htons(port);
+    my_addr.sin_port        = htons(1234);
     if (bind(sfd, (struct sockaddr *) &my_addr, sizeof(my_addr)) == -1) {
         printf("error");
         quit = 1;
@@ -176,9 +184,10 @@ static void server(int port) {
                 rotate = 1;
             }
             
-            else if (strcmp(buffer, "quit") == 0)
+            else if (strcmp(buffer, "quit") == 0) {
                 quit = 1;
                 break;
+            }
         }
 
         close(cfd);
