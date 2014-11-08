@@ -94,7 +94,7 @@ static void handleleds() {
         matrix[i][0] = colors[i];
     while (1) {
         ws2811_render(&ledstring);
-        msleep(10);
+        usleep(10000);
     }
 }
 
