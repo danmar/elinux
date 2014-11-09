@@ -30,9 +30,7 @@ static volatile int quit;
 #define GPIO_PIN                                 18
 #define DMA                                      5
 
-#define WIDTH                                    8
-#define HEIGHT                                   1
-#define LED_COUNT                                (WIDTH * HEIGHT)
+#define LED_COUNT                                8
 
 #define RGB(R,G,B)                               (((R)<<16) | ((G)<<8) | (B))
 
@@ -58,10 +56,10 @@ static ws2811_t ledstring =
 };
 
 static volatile int rotate;
-static volatile ws2811_led_t matrix[WIDTH][HEIGHT];
+static volatile int rotatetime = 100;
+static volatile ws2811_led_t leds[LED_COUNT];
 
 static void handleleds(void *data);
-static void matrix_render(void);
 
 /* server */
 
@@ -86,8 +84,8 @@ int main(int argc, char *argv[]) {
 
 
 static void handleleds(void *data) {
-    int i;
-    ws2811_led_t colors[8] = {
+    int i,time;
+    const ws2811_led_t colors[8] = {
         0x200000,  // red
         0x201000,  // orange
         0x202000,  // yellow
@@ -98,25 +96,35 @@ static void handleleds(void *data) {
         0x200010,  // pink
     };
     ws2811_init(&ledstring);
-    for (i = 0; i < 8; i++)
-        matrix[i][0] = colors[i];
+    for (i = 0; i < LED_COUNT; i++)
+        leds[i] = colors[i];
+    time = 0;
     while (quit == 0) {
-        matrix_render();
+        ++time;
+        if (time >= rotatetime) {
+            time = 0;
+            if (rotate == 1) {
+                const ws2811_led_t color = leds[0];
+                for (i = 1; i < LED_COUNT; i++)
+                    leds[i-1] = leds[i];
+                leds[LED_COUNT-1] = color;
+            } else if (rotate == 2) {
+                const ws2811_led_t color = leds[LED_COUNT-1];
+                for (i = LED_COUNT-2; i >= 0; i--)
+                    leds[i+1] = leds[i];
+                leds[0] = color;
+            }
+        }
+        
+        for (i = 0; i < LED_COUNT; i++)
+            ledstring.channel[0].leds[i] = leds[i];
         ws2811_render(&ledstring);
-        usleep(10000);
+        usleep(1000);
     }
     printf("\nws2811_fini\n");
     ws2811_fini(&ledstring);
 }
 
-static void matrix_render(void) {
-    int x, y;
-    for (x = 0; x < WIDTH; x++) {
-        for (y = 0; y < HEIGHT; y++) {
-            ledstring.channel[0].leds[(y * WIDTH) + x] = matrix[x][y];
-        }
-    }
-}
 
 static void server(void *data) {
     int sfd, cfd;
@@ -170,20 +178,19 @@ static void server(void *data) {
                 int pin, color;
                 pin   = strtol(buffer+1, NULL, 10);
                 color = strtol(1+strchr(buffer,'='), NULL, 16);
-                printf("setpixel pin=%i color=%i\n", pin, color);
-                matrix[pin][0] = color;
+                leds[pin] = color;
             }
 
-            else if (strcmp(buffer, "rotate=1") == 0) {
-                printf("rotate=1\n");
-                rotate = 1;
+            else if (match(buffer, "rotate=D")) {
+                rotate = atoi(buffer+7);
             }
-            
-            else if (strcmp(buffer, "rotate=0") == 0) {
-                printf("rotate=0\n");
-                rotate = 1;
+
+            else if (match(buffer, "rotatetime=D")) {
+                rotatetime = atoi(buffer+11);
+                if (rotatetime > 2000)
+                    rotatetime = 2000;
             }
-            
+
             else if (strcmp(buffer, "quit") == 0) {
                 quit = 1;
                 break;
