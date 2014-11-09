@@ -63,21 +63,19 @@ static void handleleds(void *data);
 
 /* server */
 
-static void server(void *data);
+static void server(void);
 static int ReadLine(int fd, char buffer[], int bufsize);
 static int match(const char *str, const char *pattern);
 
 int main(int argc, char *argv[]) {
-    pthread_t  thread1, thread2;
+    pthread_t  ledsthread;
 
-    pthread_create(&thread1, NULL, server, NULL);
-    pthread_create(&thread2, NULL, handleleds, NULL);
+    pthread_create(&ledsthread, NULL, handleleds, NULL);
 
-    // Wait for server() to quit
-    pthread_join( thread1, NULL);
+    server();
 
     // Wait for handleleds() to quit
-    pthread_join( thread2, NULL); 
+    pthread_join(ledsthread, NULL); 
 
     return 0;
 }
@@ -126,7 +124,7 @@ static void handleleds(void *data) {
 }
 
 
-static void server(void *data) {
+static void server(void) {
     int sfd, cfd;
     struct sockaddr_in my_addr = {0};
     char buffer[1024] = {0};
