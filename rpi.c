@@ -93,11 +93,18 @@ static void handleleds(void *data) {
         0x100010,  // purple
         0x200010,  // pink
     };
+    ws2811_led_t r3colors[LED_COUNT];
+    int r3count = 0;
+    int r3direction = 0;
+
     ws2811_init(&ledstring);
     for (i = 0; i < LED_COUNT; i++)
         leds[i] = colors[i];
     time = 0;
     while (quit == 0) {
+        if (rotate != 3)
+            r3direction = 0;
+
         ++time;
         if (time >= rotatetime) {
             time = 0;
@@ -111,9 +118,30 @@ static void handleleds(void *data) {
                 for (i = LED_COUNT-2; i >= 0; i--)
                     leds[i+1] = leds[i];
                 leds[0] = color;
+            } else if (rotate == 3) {
+                // initialize 
+                if (!r3direction) {
+                    for (i = 0; i < LED_COUNT; i++)
+                        r3colors[i] = leds[i];
+                    r3count = 0;
+                    r3direction = 1;
+                }
+
+                r3count++;
+                if (r3count >= LED_COUNT - 1) {
+                    r3direction = (r3direction==1) ? 2 : 1;
+                    r3count = 0;
+                }
+                if (r3direction == 1) {
+                    for (i = 0; i < LED_COUNT; i++)
+                        leds[i] = (i + r3count >= LED_COUNT) ? 0 : r3colors[i + r3count];
+                } else {
+                    for (i = 0; i < LED_COUNT; i++)
+                        leds[LED_COUNT - 1 - i] = (i + r3count >= LED_COUNT) ? 0 : r3colors[i + r3count];
+                }
             }
         }
-        
+
         for (i = 0; i < LED_COUNT; i++)
             ledstring.channel[0].leds[i] = leds[i];
         ws2811_render(&ledstring);
