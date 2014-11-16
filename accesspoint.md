@@ -6,6 +6,8 @@ IP that will be used for wlan0:  192.168.42.1
 
 1. Adjust /etc/network/interfaces
 
+Change the wlan0 configuration to:
+
     auto wlan0
     allow-hotplug wlan0
     iface wlan0 inet static
