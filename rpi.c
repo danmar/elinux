@@ -70,6 +70,9 @@ static int  match(const char *str, const char *pattern);
 int main(int argc, char *argv[]) {
     pthread_t  ledsthread;
 
+    daemon(0,0);
+    sleep(30);
+
     pthread_create(&ledsthread, NULL, handleleds, NULL);
     ledserver();
 
@@ -118,7 +121,7 @@ static void handleleds(void *data) {
                     leds[i+1] = leds[i];
                 leds[0] = color;
             } else if (rotate == 3) {
-                // initialize 
+                // initialize
                 if (!r3direction) {
                     for (i = 0; i < LED_COUNT; i++)
                         r3colors[i] = leds[i];
