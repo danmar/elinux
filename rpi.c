@@ -63,19 +63,18 @@ static void handleleds(void *data);
 
 /* server */
 
-static void server(void);
-static int ReadLine(int fd, char buffer[], int bufsize);
-static int match(const char *str, const char *pattern);
+static void ledserver(void);
+static int  readline(int fd, char buffer[], int bufsize);
+static int  match(const char *str, const char *pattern);
 
 int main(int argc, char *argv[]) {
     pthread_t  ledsthread;
 
     pthread_create(&ledsthread, NULL, handleleds, NULL);
-
-    server();
+    ledserver();
 
     // Wait for handleleds() to quit
-    pthread_join(ledsthread, NULL); 
+    pthread_join(ledsthread, NULL);
 
     return 0;
 }
@@ -84,14 +83,14 @@ int main(int argc, char *argv[]) {
 static void handleleds(void *data) {
     int i,time;
     const ws2811_led_t colors[8] = {
-        0x200000,  // red
-        0x201000,  // orange
-        0x202000,  // yellow
-        0x002000,  // green
-        0x002020,  // lightblue
-        0x000020,  // blue
-        0x100010,  // purple
-        0x200010,  // pink
+        0xff0000,  // red
+        0xff8000,  // orange
+        0xffff00,  // yellow
+        0x00ff00,  // green
+        0x00ffff,  // lightblue
+        0x0000ff,  // blue
+        0x800080,  // purple
+        0xff0080,  // pink
     };
     ws2811_led_t r3colors[LED_COUNT];
     int r3count = 0;
@@ -142,8 +141,12 @@ static void handleleds(void *data) {
             }
         }
 
-        for (i = 0; i < LED_COUNT; i++)
-            ledstring.channel[0].leds[i] = leds[i];
+        for (i = 0; i < LED_COUNT; i++) {
+            int r = (leds[i] & 0xff0000) >> 16;
+            int g = (leds[i] & 0x00ff00) >> 8;
+            int b = leds[i] & 0x0000ff;
+            ledstring.channel[0].leds[i] = RGB(r>>4, g>>4, b>>4);
+        }
         ws2811_render(&ledstring);
         usleep(1000);
     }
@@ -152,49 +155,43 @@ static void handleleds(void *data) {
 }
 
 
-static void server(void) {
+static void ledserver(void) {
     int sfd, cfd;
     struct sockaddr_in my_addr = {0};
     char buffer[1024] = {0};
 
-    printf("server socket..\n");
+    puts("ledserver\n");
+
     sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sfd == -1) {
-        printf("error");
         quit = 1;
         return;
     }
 
-    printf("bind..\n");
     my_addr.sin_family      = AF_INET;
     my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     my_addr.sin_port        = htons(1234);
     if (bind(sfd, (struct sockaddr *) &my_addr, sizeof(my_addr)) == -1) {
-        printf("error");
         quit = 1;
         close(sfd);
         return;
     }
 
-    printf("listen..\n");
     if (listen(sfd, 50) == -1) {
-        printf("error");
         quit = 1;
         close(sfd);
         return;
     }
 
     while (quit == 0) {
-        printf("accept..\n");
         cfd = accept(sfd, NULL, NULL);
         if (cfd == -1) {
-            printf("error");
             quit = 1;
             break;
         }
 
         printf("reading commands from client..");
-        while (ReadLine(cfd, buffer, sizeof(buffer))) {
+        while (readline(cfd, buffer, sizeof(buffer))) {
             if (buffer[0] == '\0')
                 continue;
 
@@ -230,7 +227,7 @@ static void server(void) {
 }
 
 
-static int ReadLine(int fd, char buffer[], int bufsize)
+static int readline(int fd, char buffer[], int bufsize)
 {
     char c = 0;
     int  pos = 0;
@@ -274,4 +271,3 @@ static int match(const char *str, const char *pattern)
 
     return (*str=='\0' && *pattern=='\0');
 }
-
