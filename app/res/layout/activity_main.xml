@@ -1,0 +1,118 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.example.elinux.MainActivity" >
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name" />
+
+    <Button
+        android:id="@+id/Button01"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView1"
+        android:layout_below="@+id/textView1"
+        android:layout_marginTop="27dp"
+        android:background="#ff0000"
+        android:minHeight="20dp"
+        android:minWidth="20dp" />
+
+    <Button
+        android:id="@+id/Button02"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/Button01"
+        android:layout_alignBottom="@+id/Button01"
+        android:layout_toRightOf="@+id/Button01"
+        android:background="#ffff00"
+        android:minHeight="20dp"
+        android:minWidth="20dp" />
+
+    <Button
+        android:id="@+id/Button03"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/Button02"
+        android:layout_alignBottom="@+id/Button02"
+        android:layout_toRightOf="@+id/Button02"
+        android:background="#00ff00"
+        android:minHeight="20dp"
+        android:minWidth="20dp" />
+
+    <Button
+        android:id="@+id/Button04"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/Button03"
+        android:layout_alignBottom="@+id/Button03"
+        android:layout_toRightOf="@+id/Button03"
+        android:background="#00ffff"
+        android:minHeight="20dp"
+        android:minWidth="20dp" />
+
+    <Button
+        android:id="@+id/Button05"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/Button04"
+        android:layout_alignBottom="@+id/Button04"
+        android:layout_toRightOf="@+id/Button04"
+        android:background="#0000ff"
+        android:minHeight="20dp"
+        android:minWidth="20dp" />
+
+    <Button
+        android:id="@+id/buttonrotate0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/Button01"
+        android:layout_below="@+id/Button01"
+        android:layout_marginTop="49dp"
+        android:text="Rotate NO" />
+
+    <Button
+        android:id="@+id/buttonrotate1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/Button01"
+        android:layout_below="@+id/buttonrotate0"
+        android:text="Rotate Up" />
+
+    <Button
+        android:id="@+id/buttonrotate2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/Button01"
+        android:layout_below="@+id/buttonrotate1"
+        android:text="Rotate Down" />
+
+    <Button
+        android:id="@+id/buttonrotate3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/Button01"
+        android:layout_below="@+id/buttonrotate2"
+        android:text="Rotate Up &amp; Down" />
+
+    <SeekBar
+        android:id="@+id/seekBar1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/buttonrotate3"
+        android:max="200" />
+
+</RelativeLayout>
